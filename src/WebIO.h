@@ -17,7 +17,6 @@ class WebIO
 {
 private:
     std::string url;
-    int Init();
     ix::WebSocket ws;
     bool isConnected = false;
     int requestId = 0;
@@ -25,18 +24,10 @@ private:
     std::condition_variable resultCv;    
     std::mutex resultProtecter;
     std::any result;
-    std::mutex responseTypeProtecter;
+    bool hasNewMessage = false;
     ResponseType expectedResponse;
 
-    void ConnectedCallback()
-    {
-        isConnected = true;
-    }
-    void DisconnectedCallback()
-    {
-        isConnected = false;
-    }
-    std::function<void(const ix::WebSocketMessagePtr&)> webSocketMsgCallback = [this](const ix::WebSocketMessagePtr& msg)
+    std::function<void(const ix::WebSocketMessagePtr&)> webSocketMsgCallback = [&](const ix::WebSocketMessagePtr& msg)
     {
         if (msg->type == ix::WebSocketMessageType::Open)
         {
@@ -59,11 +50,17 @@ private:
     };
     void HandleMessage(const ix::WebSocketMessagePtr& msg);
 
+    std::string GeneratePriceRequest(const std::string &symbols) const;
+
+
 public:
     WebIO(const std::string& endpoint):
     url(endpoint)
     {
-        Init();
+        ix::initNetSystem();
+        ws.setUrl(url);
+        ws.setOnMessageCallback(webSocketMsgCallback);
+        ws.start();
     };
     ~WebIO() = default;
     double getPrice(const std::string& symbols); 
