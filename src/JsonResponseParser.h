@@ -21,7 +21,8 @@ class JsonResponseParser
             receivedJson = json::parse(jsonString);
         }
         int getResponseStatus() const;
-        std::string getUserData() const;
+        // return information about currency this user have in their vallets
+        std::map<std::string, double>  getUserData() const;
         std::pair<std::string, double> getPriceFromTicker() const;
         time_t getServerTime() const;
         std::string getSellRequestResult() const;

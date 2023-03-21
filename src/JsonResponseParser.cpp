@@ -13,9 +13,20 @@ int JsonResponseParser::getResponseStatus() const
         throw std::logic_error("Received malformed JSON: no status field");
 }
 
-std::string JsonResponseParser::getUserData() const
+std::map<std::string, double> JsonResponseParser::getUserData() const
 {
-    return receivedJson.dump();
+    std::map<std::string, double> retVal;
+    if (receivedJson["result"].contains("balances"))
+    {
+        // const auto str = receivedJson["result"]["balances"].dump();
+        for (const auto& asset: receivedJson["result"]["balances"])
+        {
+            retVal[asset.at("asset")] = std::stod(asset.at("free").get<std::string>());
+        }
+        return retVal;
+    }
+    else
+        throw std::logic_error("Received malformed JSON: no balances field");
 }
 
 std::pair<std::string, double> JsonResponseParser::getPriceFromTicker() const

@@ -72,7 +72,7 @@ public:
     ~WebIO() = default;
 
     double GetPrice(const std::string& symbols); 
-    std::string GetUserData(const std::time_t& timestamp);
+    std::map<std::string, double> GetUserData(const std::time_t& timestamp);
     std::time_t GetServerTime();
     std::string SendBuyRequest(const std::string& symbols, const double& qty, const double& price, const std::time_t timestamp);
     std::string SendSellRequest(const std::string& symbols, const double& qty, const double& price, const std::time_t timestamp);

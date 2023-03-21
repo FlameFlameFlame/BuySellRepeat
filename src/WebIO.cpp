@@ -84,11 +84,11 @@ double WebIO::GetPrice(const std::string &symbols)
         throw std::logic_error("Incorrect symbols returned in GetPrice");
 }
 
-std::string WebIO::GetUserData(const std::time_t &timestamp)
+std::map<std::string, double> WebIO::GetUserData(const std::time_t &timestamp)
 {
     expectedResponse = ResponseType::USER_DATA;
     SendRequestAwaitResponse(ResponseType::USER_DATA, GenerateUserDataRequest(timestamp));
-    const auto retVal = std::any_cast<std::string>(result);
+    const auto retVal = std::any_cast<std::map<std::string, double>>(result);
     result.reset();
     return retVal;
 }
