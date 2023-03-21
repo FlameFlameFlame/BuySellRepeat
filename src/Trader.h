@@ -18,9 +18,6 @@ class Trader
         int tickSeconds = 1;
         double currencyQuantity = 0;
 
-        double SellCurrency(const double& quantity);
-        double BuyCurrency(const double& quantity);
-
         std::string myCurrencySymbol;
         std::string tradingCurrencySymbol;
         Vallets portfolio;
@@ -44,6 +41,12 @@ class Trader
         }
         void UpdatePrice();
 
+
+        std::string SellCurrency(const double& quantity);
+        std::string BuyCurrency(const double& quantity);
+
+        std::string SellAllCurrency();
+        std::string BuyCurrenctyForAll();
 };
 
 }
