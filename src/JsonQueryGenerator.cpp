@@ -36,7 +36,7 @@ void JsonQueryGenerator::GenerateJson()
     // implement other methods later
 }
 
-std::string JsonQueryGenerator::CalculateSignature(const std::string& paramsString)
+std::string JsonQueryGenerator::CalculateSignature(const std::string& paramsString) const
 {
     std::vector<uint8_t> signatureVectorChars(32);
     hmac_sha256(secretKey.data(), secretKey.size(), paramsString.data(), paramsString.size(), signatureVectorChars.data(), signatureVectorChars.size());
@@ -47,10 +47,10 @@ std::string JsonQueryGenerator::CalculateSignature(const std::string& paramsStri
     return ss.str();
 }
 
-std::string JsonQueryGenerator::GetParamsStringToSign(const nlohmann::json &paramsSection)
+std::string JsonQueryGenerator::GetParamsStringToSign(const nlohmann::json& paramsSection)
 {
     std::string paramsString {};
-        for (const auto& [param, value] : resultJson["params"].items())
+        for (const auto& [param, value] : paramsSection.items())
         {   
             std::string valueStr;
             if (value.is_string())

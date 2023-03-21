@@ -20,7 +20,7 @@ class JsonQueryGenerator
         std::string secretKey;
 
         // manually construct the 'HTTP-like' request: https://developers.binance.com/docs/binance-trading-api/websocket_api#signed-request-example-hmac
-        static std::string CalculateSignature(const std::string& paramsString);
+        std::string CalculateSignature(const std::string& paramsString) const;
         static std::string GetParamsStringToSign(const nlohmann::json& paramsSection);
         void GenerateJson();
     public:
