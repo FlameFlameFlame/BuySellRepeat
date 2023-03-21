@@ -19,12 +19,13 @@ private:
     std::string url;
     ix::WebSocket ws;
     bool isConnected = false;
-    int requestId = 0;
+    unsigned long long requestId = 0;
+    const std::string apiKey;
+    const std::string secretKey;
 
     std::condition_variable resultCv;    
     std::mutex resultProtecter;
     std::any result;
-    bool hasNewMessage = false;
     ResponseType expectedResponse;
 
     std::function<void(const ix::WebSocketMessagePtr&)> webSocketMsgCallback = [&](const ix::WebSocketMessagePtr& msg)
@@ -51,18 +52,21 @@ private:
     void HandleMessage(const ix::WebSocketMessagePtr& msg);
 
     std::string GeneratePriceRequest(const std::string &symbols) const;
+    std::string GenerateUserDataRequest(const time_t& timestamp) const;
 
-
+    void SendRequestAwaitResponse(const ResponseType& r, const std::string& requestStr);
 public:
-    WebIO(const std::string& endpoint):
-    url(endpoint)
+    WebIO(const std::string& endpoint, const std::string& apiKey, const std::string& secretKey):
+    url(endpoint), apiKey(apiKey), secretKey(secretKey)
     {
         ix::initNetSystem();
         ws.setUrl(url);
         ws.setOnMessageCallback(webSocketMsgCallback);
         ws.start();
+        std::this_thread::sleep_for(std::chrono::milliseconds(2000)); // TODO: investigate. sleeping so next messages won't get lost
     };
     ~WebIO() = default;
-    double getPrice(const std::string& symbols); 
+    double GetPrice(const std::string& symbols); 
+    std::string GetUserData(const std::time_t& timestamp);
 };
 }
