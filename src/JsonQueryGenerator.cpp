@@ -22,8 +22,11 @@ void JsonQueryGenerator::GenerateJson()
     {
         resultJson["method"] = "account.status";
         resultJson["params"]["apiKey"] = apiKey;
-        resultJson["params"]["signature"] = signature.value();
         resultJson["params"]["timestamp"] = std::any_cast<std::time_t>(arguements[0]);
+
+        const auto paramsString = GetParamsStringToSign(resultJson["params"]);
+        resultJson["params"]["signature"] = CalculateSignature(paramsString);
+
     }
     else if (qt == QueryType::SERVER_TIME)
     {
@@ -32,29 +35,41 @@ void JsonQueryGenerator::GenerateJson()
 
     // implement other methods later
 }
-void JsonQueryGenerator::CalculateSignature()
+
+std::string JsonQueryGenerator::CalculateSignature(const std::string& paramsString)
 {
-    using json = nlohmann::json;
-    std::string paramsString {};
-    if (qt == QueryType::BUY)
-    {
-
-    }
-    else if (qt == QueryType::SELL)
-    {
-
-    }
-    else if (qt == QueryType::USER_DATA)
-    {
-        paramsString += "apiKey="+apiKey+"&";
-        paramsString += "timestamp="+std::to_string(std::any_cast<std::time_t>(arguements[0]));
-    }
     std::vector<uint8_t> signatureVectorChars(32);
     hmac_sha256(secretKey.data(), secretKey.size(), paramsString.data(), paramsString.size(), signatureVectorChars.data(), signatureVectorChars.size());
     std::stringstream ss;
     for (uint8_t x : signatureVectorChars) {
         ss << std::hex << std::setfill('0') << std::setw(2) << (int)x;
     }
-    signature = std::optional(ss.str());
+    return ss.str();
+}
+
+std::string JsonQueryGenerator::GetParamsStringToSign(const nlohmann::json &paramsSection)
+{
+    std::string paramsString {};
+        for (const auto& [param, value] : resultJson["params"].items())
+        {   
+            std::string valueStr;
+            if (value.is_string())
+                value.get_to(valueStr);
+            else if (value.is_number_integer()) 
+            {
+                long long tempNumber;
+                value.get_to(tempNumber);
+                valueStr = std::to_string(tempNumber);
+            }
+            else if (value.is_number_float())
+            {
+                double tempNumber;
+                value.get_to(tempNumber);
+                valueStr = std::to_string(tempNumber);
+            } 
+            paramsString += param + "=" + valueStr + "&";
+        }
+        paramsString.pop_back(); // erase trailing '&'
+        return paramsString;
 }
 }

@@ -18,10 +18,10 @@ class JsonQueryGenerator
         nlohmann::json resultJson;
         std::string apiKey;
         std::string secretKey;
-        std::optional<std::string> signature;
 
         // manually construct the 'HTTP-like' request: https://developers.binance.com/docs/binance-trading-api/websocket_api#signed-request-example-hmac
-        void CalculateSignature();
+        static std::string CalculateSignature(const std::string& paramsString);
+        static std::string GetParamsStringToSign(const nlohmann::json& paramsSection);
         void GenerateJson();
     public:
         JsonQueryGenerator(const int& id, const QueryType& queryType, const std::vector<std::any>&& args):
@@ -32,7 +32,6 @@ class JsonQueryGenerator
         JsonQueryGenerator(const int& id, const QueryType& queryType, const std::string& apiKey, const std::string& secretKey, const std::vector<std::any>&& args):
         id(id), qt(queryType), apiKey(apiKey), secretKey(secretKey), arguements(std::move(args))
         {
-            CalculateSignature();
             GenerateJson();
         };
         ~JsonQueryGenerator() = default;
@@ -40,13 +39,6 @@ class JsonQueryGenerator
         nlohmann::json GetJson() const
         {
             return resultJson;
-        }
-        std::string GetSignature() const
-        {
-            if (signature)
-                return signature.value();
-            else
-                return {};
         }
 };
 }
