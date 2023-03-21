@@ -21,7 +21,9 @@ class JsonResponseParser
             receivedJson = json::parse(jsonString);
         }
         int getResponseStatus() const;
+        std::string getUserData() const;
         std::pair<std::string, double> getPriceFromTicker() const;
+        time_t getServerTime() const;
         int getSellResult() const;
         int getBuyResult() const;
         ResponseType getResponceType() const;

@@ -36,7 +36,6 @@ class Trader
         ~Trader() = default;
         double GetPrice()
         {
-            UpdatePrice();
             return currentPrice;
         }
         double GetCurrencyQuantity() const

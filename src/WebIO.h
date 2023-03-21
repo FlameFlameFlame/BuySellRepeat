@@ -53,6 +53,7 @@ private:
 
     std::string GeneratePriceRequest(const std::string &symbols) const;
     std::string GenerateUserDataRequest(const time_t& timestamp) const;
+    std::string GenerateServerTimeRequest() const;
 
     void SendRequestAwaitResponse(const ResponseType& r, const std::string& requestStr);
 public:
@@ -66,7 +67,9 @@ public:
         std::this_thread::sleep_for(std::chrono::milliseconds(2000)); // TODO: investigate. sleeping so next messages won't get lost
     };
     ~WebIO() = default;
+
     double GetPrice(const std::string& symbols); 
     std::string GetUserData(const std::time_t& timestamp);
+    std::time_t GetServerTime();
 };
 }

@@ -11,30 +11,42 @@ namespace BuySellRepeat_NS
 
 class JsonQueryGenerator
 {
-    using json = nlohmann::json;
     private:
         int id = 0;
         std::vector<std::any> arguements;
         QueryType qt;
-        json resultJson;
+        nlohmann::json resultJson;
+        std::string apiKey;
+        std::string secretKey;
+        std::optional<std::string> signature;
+
+        // manually construct the 'HTTP-like' request: https://developers.binance.com/docs/binance-trading-api/websocket_api#signed-request-example-hmac
+        void CalculateSignature();
         void GenerateJson();
     public:
-        JsonQueryGenerator(const int& id, const QueryType& queryType):
-        id(id), qt(queryType)
+        JsonQueryGenerator(const int& id, const QueryType& queryType, const std::vector<std::any>&& args):
+        id(id), qt(queryType), arguements(std::move(args))
         {
+            GenerateJson();
+        };
+        JsonQueryGenerator(const int& id, const QueryType& queryType, const std::string& apiKey, const std::string& secretKey, const std::vector<std::any>&& args):
+        id(id), qt(queryType), apiKey(apiKey), secretKey(secretKey), arguements(std::move(args))
+        {
+            CalculateSignature();
+            GenerateJson();
         };
         ~JsonQueryGenerator() = default;
 
-        void SetArguements(const std::vector<std::any>&& args)
-        {
-            arguements = std::move(args);
-            GenerateJson();
-        }
-        json GetJson() const
+        nlohmann::json GetJson() const
         {
             return resultJson;
         }
-        
-        
+        std::string GetSignature() const
+        {
+            if (signature)
+                return signature.value();
+            else
+                return {};
+        }
 };
 }
