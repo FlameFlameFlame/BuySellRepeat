@@ -11,6 +11,12 @@ namespace BuySellRepeat_NS
 
 class JsonQueryGenerator
 {
+    enum class BuyOrSell
+    {
+        BUY,
+        SELL
+    };
+
     private:
         int id = 0;
         std::vector<std::any> arguements;
@@ -23,6 +29,9 @@ class JsonQueryGenerator
         std::string CalculateSignature(const std::string& paramsString) const;
         static std::string GetParamsStringToSign(const nlohmann::json& paramsSection);
         void GenerateJson();
+
+        // those requests are similar so I've separated them into function
+        void GenerateBuyOrSellRequest(const BuyOrSell& action);
     public:
         JsonQueryGenerator(const int& id, const QueryType& queryType, const std::vector<std::any>&& args):
         id(id), qt(queryType), arguements(std::move(args))

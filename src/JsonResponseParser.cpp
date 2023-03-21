@@ -39,6 +39,11 @@ time_t JsonResponseParser::getServerTime() const
         throw std::logic_error("Received malformed JSON: no result field");
 }
 
+std::string JsonResponseParser::getSellRequestResult() const
+{
+    return receivedJson.dump();
+}
+
 std::string JsonResponseParser::getBuyRequestResult() const
 {
     return receivedJson.dump();

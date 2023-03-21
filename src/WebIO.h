@@ -54,6 +54,7 @@ private:
     std::string GeneratePriceRequest(const std::string &symbols) const;
     std::string GenerateUserDataRequest(const time_t& timestamp) const;
     std::string GenerateBuyRequest(const std::string& symbols, const double& qty, const double& price, const std::time_t timestamp);
+    std::string GenerateSellRequest(const std::string& symbols, const double& qty, const double& price, const std::time_t timestamp);
 
     std::string GenerateServerTimeRequest() const;
 
@@ -74,5 +75,7 @@ public:
     std::string GetUserData(const std::time_t& timestamp);
     std::time_t GetServerTime();
     std::string SendBuyRequest(const std::string& symbols, const double& qty, const double& price, const std::time_t timestamp);
+    std::string SendSellRequest(const std::string& symbols, const double& qty, const double& price, const std::time_t timestamp);
+
 };
 }

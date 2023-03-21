@@ -22,7 +22,7 @@ enum class QueryType
     PING = 0,
     SERVER_TIME,
     TICKER,
-    SELL,
+    SELL_REQUEST,
     BUY_REQUEST,
     USER_DATA
 };
@@ -32,6 +32,7 @@ enum class ResponseType
     SERVER_TIME,
     TICKER,
     USER_DATA,
-    BUY_REQUEST_ACK
+    BUY_REQUEST_ACK,
+    SELL_REQUEST_ACK
 };
 }
