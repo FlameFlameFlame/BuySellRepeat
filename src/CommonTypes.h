@@ -23,7 +23,7 @@ enum class QueryType
     SERVER_TIME,
     TICKER,
     SELL,
-    BUY,
+    BUY_REQUEST,
     USER_DATA
 };
 
@@ -31,6 +31,7 @@ enum class ResponseType
 {
     SERVER_TIME,
     TICKER,
-    USER_DATA
+    USER_DATA,
+    BUY_REQUEST_ACK
 };
 }

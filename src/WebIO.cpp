@@ -19,6 +19,8 @@ void WebIO::HandleMessage(const ix::WebSocketMessagePtr &msg)
         result = jrp.getUserData();
     else if (expectedResponse == ResponseType::SERVER_TIME)
         result = jrp.getServerTime();
+    else if (expectedResponse == ResponseType::BUY_REQUEST_ACK)
+        result = jrp.getBuyRequestResult();
 
     resultCv.notify_one();
 
@@ -43,6 +45,13 @@ std::string WebIO::GeneratePriceRequest(const std::string &symbols) const
 std::string WebIO::GenerateUserDataRequest(const time_t &timestamp) const
 {
     JsonQueryGenerator jqg(requestId, QueryType::USER_DATA, apiKey, secretKey, {timestamp});
+    const auto reqstr = jqg.GetJson().dump();
+    return reqstr;
+}
+
+std::string WebIO::GenerateBuyRequest(const std::string &symbols, const double &qty, const double &price, const std::time_t timestamp)
+{
+    JsonQueryGenerator jqg(requestId, QueryType::BUY_REQUEST, apiKey, secretKey, {symbols, qty, price, timestamp});
     const auto reqstr = jqg.GetJson().dump();
     return reqstr;
 }
@@ -83,4 +92,14 @@ std::time_t WebIO::GetServerTime()
     result.reset();
     return retVal;
 }
+
+std::string WebIO::SendBuyRequest(const std::string &symbols, const double &qty, const double &price, const std::time_t timestamp)
+{
+    expectedResponse = ResponseType::BUY_REQUEST_ACK;
+    SendRequestAwaitResponse(ResponseType::SERVER_TIME, GenerateBuyRequest(symbols, qty, price, timestamp));
+    const auto retVal = std::any_cast<std::string>(result);
+    result.reset();
+    return retVal;
+}
+
 }

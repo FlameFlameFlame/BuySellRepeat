@@ -1,7 +1,6 @@
 #include "JsonQueryGenerator.h"
 #include <hmac_sha256.h>
 
-#include <iostream>
 #include <sstream>
 
 namespace BuySellRepeat_NS
@@ -41,15 +40,13 @@ void JsonQueryGenerator::GenerateJson()
         resultJson["params"]["side"] = "BUY";
         resultJson["params"]["type"] = "LIMIT";
         resultJson["params"]["timeInForce"] = "GTC";
-        resultJson["params"]["price"] = std::any_cast<double>(arguements[2]);
-        resultJson["params"]["quantity"] = std::any_cast<double>(arguements[1]);
+        resultJson["params"]["price"] = std::to_string(std::any_cast<double>(arguements[2]));
+        resultJson["params"]["quantity"] = std::to_string(std::any_cast<double>(arguements[1]));
         resultJson["params"]["timestamp"] = std::any_cast<time_t>(arguements[3]);
 
         const auto paramsString = GetParamsStringToSign(resultJson["params"]);
-        std::cout << paramsString << std::endl;
         const auto sign = CalculateSignature(paramsString);
         resultJson["params"]["signature"] = sign;
-        std::cout << sign << std::endl;
     }
 }
     // implement other methods later
