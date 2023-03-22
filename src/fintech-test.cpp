@@ -8,7 +8,10 @@
 #include <ixwebsocket/IXUserAgent.h>
 #include <nlohmann/json.hpp>
 
+#include <ctime>
+#include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <thread>
 #include <string>
 
@@ -32,11 +35,13 @@ int main(int argc, char** argv)
     if (!parser.parse_args(argc, argv, 1))
         throw std::logic_error("Incorrect arguements set");
     
-    std::cout << tradingParameters.myCurrency;
-    std::cout << tradingParameters.tradingCurrency;
+    auto currentTime = Trader::GetCurrentTimestampSeconds();
+    std::stringstream ss;
+    ss << "prices " << tradingParameters.tradingCurrency << tradingParameters.myCurrency << std::put_time(std::localtime(&currentTime), "%F %T") << ".csv";
+    std::fstream csvPricesFile{ss.str(), csvPricesFile.trunc | csvPricesFile.out};
 
     WebIO wio("wss://testnet.binance.vision/ws-api/v3", apiKey, secretKey);
-    Display disp(std::cout);
+    Display disp(std::cout, csvPricesFile);
     Trader tr(*pOptions, wio, disp);
     tr.StartTrading();
 

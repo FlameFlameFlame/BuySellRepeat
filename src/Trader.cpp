@@ -92,7 +92,7 @@ bool Trader::Tick()
     using namespace std::chrono;
     using namespace std::chrono_literals;
     UpdatePrice();
-    display.ReportPriceAndDiff(currentPrice, CalculatePercentageDiff());
+    display.ReportPriceAndDiff(GetCurrentTimestampSeconds(), currentPrice, CalculatePercentageDiff());
     const double diffPercent = CalculatePercentageDiff();
     if (diffPercent > profitPercentToSell || diffPercent < -lossPercentToSell)
     {
