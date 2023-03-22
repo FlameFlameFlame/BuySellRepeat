@@ -104,45 +104,84 @@ std::map<std::string, double> WebIO::GetUserData(const std::time_t &timestamp)
 {
     expectedResponse = ResponseType::USER_DATA;
     SendRequestAwaitResponse(ResponseType::USER_DATA, GenerateUserDataRequest(timestamp));
-    const auto retVal = std::any_cast<std::map<std::string, double>>(result);
-    result.reset();
-    return retVal;
+    try
+    {
+        const auto retVal = std::any_cast<std::map<std::string, double>>(result);
+        result.reset();
+        return retVal;
+    }
+    catch(std::bad_any_cast& e)
+    {
+        result.reset();
+        return {};
+    }
 }
 
 std::time_t WebIO::GetServerTime()
 {
     expectedResponse = ResponseType::SERVER_TIME;
     SendRequestAwaitResponse(ResponseType::SERVER_TIME, GenerateServerTimeRequest());
-    const auto retVal = std::any_cast<std::time_t>(result);
-    result.reset();
-    return retVal;
+    try
+    {
+        const auto retVal = std::any_cast<std::time_t>(result);
+        result.reset();
+        return retVal;
+    }
+    catch(std::bad_any_cast& e)
+    {
+        result.reset();
+        return {};
+    }
 }
 
 long long WebIO::SendBuyRequest(const std::string &symbols, const double &qty, const double &price, const std::time_t timestamp)
 {
     expectedResponse = ResponseType::BUY_REQUEST_ACK;
     SendRequestAwaitResponse(ResponseType::SERVER_TIME, GenerateBuyRequest(symbols, qty, price, timestamp));
-    const auto retVal = std::any_cast<long long>(result);
-    result.reset();
-    return retVal;
+    try
+    {
+        const auto retVal = std::any_cast<long long>(result);
+        result.reset();
+        return retVal;
+    }
+    catch(std::bad_any_cast& e)
+    {
+        result.reset();
+        return {};
+    }
 }
 
 long long WebIO::SendSellRequest(const std::string &symbols, const double &qty, const double &price, const std::time_t timestamp)
 {
     expectedResponse = ResponseType::SELL_REQUEST_ACK;
     SendRequestAwaitResponse(ResponseType::SERVER_TIME, GenerateSellRequest(symbols, qty, price, timestamp));
-    const auto retVal = std::any_cast<long long>(result);
-    result.reset();
-    return retVal;
+    try
+    {
+        const auto retVal = std::any_cast<long long>(result);
+        result.reset();
+        return retVal;
+    }
+    catch(std::bad_any_cast& e)
+    {
+        result.reset();
+        return {};
+    }
 }
 
 std::optional<double> WebIO::SendOrderQuery(const std::string &symbols, const long long &orderId, const std::time_t& timestamp)
 {
     expectedResponse = ResponseType::ORDER_QUERY;
     SendRequestAwaitResponse(ResponseType::ORDER_QUERY, GenerateQueryRequest(symbols, orderId, timestamp)); 
-    const auto retVal = std::any_cast<std::optional<double>>(result);
-    result.reset();
-    return retVal;
-
+    try
+    {
+        const auto retVal = std::any_cast<std::optional<double>>(result);
+        result.reset();
+        return retVal;
+    }
+    catch(std::bad_any_cast& e)
+    {
+        result.reset();
+        return std::nullopt;
+    }
 }
 }
