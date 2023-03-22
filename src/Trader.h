@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Accountant.h"
 #include "CommonTypes.h"
+#include "Display.h"
 #include "WebIO.h"
 
 namespace BuySellRepeat_NS
