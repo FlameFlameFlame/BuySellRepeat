@@ -12,6 +12,7 @@ void BuySellRepeat_NS::Display::ReportTradingStart(const std::string &tradingPai
     "Sell if loss higher then " << std::to_string(lossPercentToSell) << "%" << std::endl << 
     "Buy if profit higher then " << std::to_string(profitPercentToSell) << "%" << std::endl <<
     "Sell if no signinificant changes after " << std::to_string(idleTimeToSellSeconds) << "s" << std::endl;
+    outStream.flush();
 }
 
 void BuySellRepeat_NS::Display::ReportBuyOperation(const long& timestamp, const double &price, const double &currencyQty, const double &spentQty)
@@ -19,6 +20,7 @@ void BuySellRepeat_NS::Display::ReportBuyOperation(const long& timestamp, const 
     outStream << std::put_time(std::localtime(&timestamp), "%F %T\t") <<
     "Buy  " << currencyQty << " " << tradingCurrencySymbol << 
     " for " << spentQty << " " << myCurrencySymbol << ". ";
+    outStream.flush();
 }
 
 void BuySellRepeat_NS::Display::ReportSellOperation(const long& timestamp, const double &price, const double &currencyQty, const double &recvQty)
@@ -26,6 +28,7 @@ void BuySellRepeat_NS::Display::ReportSellOperation(const long& timestamp, const
     outStream << std::put_time(std::localtime(&timestamp), "%F %T\t") <<
     "Sell " << currencyQty << " " << tradingCurrencySymbol << 
     " for " << recvQty << " " << myCurrencySymbol << ". ";
+    outStream.flush();
 }
 
 void BuySellRepeat_NS::Display::ReportBalance(const long& timestamp, const double& myCurrencyBalance, const double& tradingCurrencyBalance, const TradeResults& results) 
@@ -34,6 +37,7 @@ void BuySellRepeat_NS::Display::ReportBalance(const long& timestamp, const doubl
     tradingCurrencySymbol << ": " << std::to_string(tradingCurrencyBalance) <<
     "\tprofits: " << std::to_string(results.allProfits) << " " << myCurrencySymbol << "\tlosses:" << std::to_string(results.allLosses) << " " <<myCurrencySymbol << 
     "\tnet: " << std::to_string(results.net) << " " << myCurrencySymbol << std::endl;
+    outStream.flush();
 }
 
 void BuySellRepeat_NS::Display::ReportPriceAndDiff(const long& timestamp, const double &price, const double &diff)
@@ -41,6 +45,7 @@ void BuySellRepeat_NS::Display::ReportPriceAndDiff(const long& timestamp, const 
     outStream << std::put_time(std::localtime(&timestamp), "%F %T\t") << tradingCurrencySymbol + myCurrencySymbol << ": " <<
     std::to_string(price) << "\t\tdiff: " << std::to_string(diff) + "%" << std::endl;
     pricesFile << std::put_time(std::localtime(&timestamp), "%F %T") << "," << std::to_string(price) << std::endl;
+    outStream.flush();
 }
 
 void BuySellRepeat_NS::Display::ReportWaitingEnd(const unsigned int &duration)
@@ -48,6 +53,7 @@ void BuySellRepeat_NS::Display::ReportWaitingEnd(const unsigned int &duration)
     std::strstream ss;
     ss  << "Order is fullfilled in " << duration << "ms" << std::endl;
     outStream << ss.str();
+    outStream.flush();
 }
 
 void BuySellRepeat_NS::Display::ReportOrderWaiting(const unsigned int &durationSeconds)

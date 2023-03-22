@@ -64,7 +64,7 @@ void Trader::TradingCycle()
     display.ReportBalance(GetCurrentTimestampSeconds(), portfolio[myCurrencySymbol], portfolio[tradingCurrencySymbol], results);
 
     if (currencyToBuyOrSellQuantity * currentPrice > GetMyCurrencyQuantity())
-        throw std::logic_error("Trying to buy " + std::to_string(currencyToBuyOrSellQuantity) + " " + tradingCurrencySymbol + " for " + std::to_string(currencyToBuyOrSellQuantity / currentPrice) + " " + myCurrencySymbol + ", but have only " + std::to_string(GetMyCurrencyQuantity()) + " " + myCurrencySymbol);
+        throw std::logic_error("Trying to buy " + std::to_string(currencyToBuyOrSellQuantity) + " " + tradingCurrencySymbol + " for " + std::to_string(currencyToBuyOrSellQuantity * currentPrice) + " " + myCurrencySymbol + ", but have only " + std::to_string(GetMyCurrencyQuantity()) + " " + myCurrencySymbol);
 
     UpdatePrice();
     BuyCurrency(currencyToBuyOrSellQuantity);
@@ -114,12 +114,14 @@ double Trader::AwaitForOrderFullfillment(const long long& orderId) const
 
     const auto requestTime = system_clock::now();
     std::optional<double> fullfillmentQty;
-    // display.ReportOrderWaitingStart();
+    auto queryTimeStart = system_clock::now();
     do
     {
-        fullfillmentQty = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
-        // display.ReportOrderWaiting(duration_cast<seconds>(system_clock::now() - requestTime).count());
-        std::this_thread::sleep_for(milliseconds(500));
+        if (duration_cast<milliseconds>(system_clock::now() - queryTimeStart).count() > tickMilliseconds)
+        {
+            fullfillmentQty = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
+            queryTimeStart = system_clock::now();
+        }
     } 
     while (!fullfillmentQty);
     display.ReportWaitingEnd(duration_cast<milliseconds>(system_clock::now() - requestTime).count());
@@ -138,7 +140,9 @@ void Trader::AccountTradeResults(const double& diff)
 void Trader::UpdatePrice()
 {
     previousTickPrice = currentPrice;
-    currentPrice = webIO.GetPrice(tradingPair);
+    const auto getPriceResult = webIO.GetPrice(tradingPair);
+    if (getPriceResult)
+        currentPrice = getPriceResult.value(); 
 }
 
 void Trader::GetValletDataFromServer()

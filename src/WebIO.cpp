@@ -44,7 +44,7 @@ void WebIO::SendRequestAwaitResponse(const ResponseType& r, const std::string& r
     ws.send(requestStr);
     
     const auto waitingStartTime = system_clock::now();
-    while (duration_cast<milliseconds>(system_clock::now() - waitingStartTime).count() < 500 && resultCv.wait_for(lock, 50ms) == std::cv_status::timeout); 
+    resultCv.wait_for(lock, 300ms);
     return std::promise<void>{};}); // TODO: parametrise waiting time
 
     auto future = std::async(std::launch::deferred, sendAndAwaitFunc);
@@ -94,16 +94,24 @@ std::string WebIO::GenerateServerTimeRequest() const
     return reqstr;
 }
 
-double WebIO::GetPrice(const std::string &symbols)
+std::optional<double> WebIO::GetPrice(const std::string &symbols)
 {
     expectedResponse = ResponseType::TICKER;
     SendRequestAwaitResponse(ResponseType::TICKER, GeneratePriceRequest(symbols));
-    const auto resultPair = std::any_cast<std::pair<std::string, double>>(result);
-    result.reset();
-    if (resultPair.first == symbols)
-        return resultPair.second;
-    else
-        throw std::logic_error("Incorrect symbols returned in GetPrice");
+    try 
+    {
+        const auto resultPair = std::any_cast<std::pair<std::string, double>>(result);
+        result.reset();
+        if (resultPair.first == symbols)
+            return resultPair.second;
+        else
+            throw std::logic_error("Incorrect symbols returned in GetPrice");
+    }
+    catch (std::bad_any_cast &e)
+    {
+        result.reset();
+        return std::nullopt;
+    }
 }
 
 std::map<std::string, double> WebIO::GetUserData(const std::time_t &timestamp)
