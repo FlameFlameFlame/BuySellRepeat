@@ -148,6 +148,8 @@ void Trader::UpdatePrice()
 void Trader::GetValletDataFromServer()
 {
     const auto vallet = webIO.GetUserData(GetCurrentTimestamp());
+    if (vallet.size() == 0)
+        return;
     try 
     {
         portfolio[myCurrencySymbol] = vallet.at(myCurrencySymbol);
