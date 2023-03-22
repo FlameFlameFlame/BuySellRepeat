@@ -1,8 +1,6 @@
 #include "Trader.h"
 
 #include <chrono>
-#include <future>
-#include <thread>
 
 namespace BuySellRepeat_NS
 {
@@ -11,7 +9,7 @@ double Trader::SellCurrency(const double &quantity)
 {
     const auto orderId = webIO.SendSellRequest(tradingPair, quantity, currentPrice, GetCurrentTimestamp());
     acc.ReportSellOperation(GetCurrentTimestampSeconds(), currentPrice, quantity, quantity * currentPrice);
-    const auto soldQty = std::async(&Trader::AwaitForOrderFullfillment, this, orderId).get();
+    const auto soldQty = AwaitForOrderFullfillment(orderId);
     AccountTradeResults(soldQty * currentPrice - spentToBuy);
     return soldQty;
 }
@@ -21,7 +19,7 @@ double Trader::BuyCurrency(const double &quantity)
     spentToBuy = quantity * currentPrice;
     const auto orderId = webIO.SendBuyRequest(tradingPair, quantity, currentPrice, GetCurrentTimestamp());
     acc.ReportBuyOperation(GetCurrentTimestampSeconds(), currentPrice, quantity, quantity * currentPrice);
-    return std::async(&Trader::AwaitForOrderFullfillment, this, orderId).get();
+    return AwaitForOrderFullfillment(orderId);
 }
 
 double Trader::SellAllCurrency()
@@ -113,9 +111,11 @@ double Trader::AwaitForOrderFullfillment(const long long& orderId) const
 
     const auto requestTime = system_clock::now();
     std::optional<double> fullfillmentQty;
+    // acc.ReportOrderWaitingStart();
     do
     {
         fullfillmentQty = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
+        // acc.ReportOrderWaiting(duration_cast<seconds>(system_clock::now() - requestTime).count());
         std::this_thread::sleep_for(milliseconds(500));
     } 
     while (!fullfillmentQty);
