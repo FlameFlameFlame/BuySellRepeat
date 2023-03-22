@@ -7,12 +7,11 @@
 namespace BuySellRepeat_NS
 {
 
-struct TradeParams
+struct TradeResults
 {
-    std::string tradingPair;
-    double lossPercentToSell;
-    double profitPercetToBuy;
-    int idleTimeToSellSeconds;
+    double allProfits;
+    double allLosses;
+    double net;
 };
 
 using Vallets = std::map<std::string, double>;

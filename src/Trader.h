@@ -30,19 +30,26 @@ class Trader
         Vallets portfolio;
 
         WebIO& webIO;
-        Accountant& acc;
+        Display& acc;
 
         bool doTrade;
 
-        private:
+        // updated every sell
+        TradeResults results;
+        // updated every buy
+        double spentToBuy = 0.0;
+
+    private:
         void TradingLoop();
         void TradingCycle();
         // returns true if sold or bought in this tick
         bool Tick();
         double CalculatePercentageDiff();
+        double AwaitForOrderFullfillment(const long long& orderId) const;
+        void AccountTradeResults(const double& diff);
 
     public:
-        Trader(const std::string& _tradingPair, const double& currencyToBuyQuantity, const double& _lossPercentToSell, const double& _profitPercentToBuy, const unsigned int& idleTimeToSellSeconds,  WebIO& wio, Accountant& acc) :
+        Trader(const std::string& _tradingPair, const double& currencyToBuyQuantity, const double& _lossPercentToSell, const double& _profitPercentToBuy, const unsigned int& idleTimeToSellSeconds,  WebIO& wio, Display& acc) :
             lossPercentToSell(_lossPercentToSell), profitPercentToBuy(_profitPercentToBuy), tradingPair(_tradingPair), currencyToBuyOrSellQuantity(currencyToBuyQuantity), idleTimeToSell(idleTimeToSellSeconds), webIO(wio), acc(acc)
             {
                 std::copy(tradingPair.begin() + 3, tradingPair.end(), std::back_inserter(myCurrencySymbol));
@@ -84,11 +91,15 @@ class Trader
             return GetCurrentTimestamp() / 1000;
         };
 
-
         void StartTrading();
         void StopTrading()
         {
             doTrade = false;
+        }
+
+        TradeResults GetTradeResults() const
+        {
+            return results;
         }
 };
 

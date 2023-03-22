@@ -1,41 +1,27 @@
 #include "Trader.h"
 
 #include <chrono>
+#include <future>
+#include <thread>
 
 namespace BuySellRepeat_NS
 {
 
 double Trader::SellCurrency(const double &quantity)
 {
-    using namespace std::chrono;
     const auto orderId = webIO.SendSellRequest(tradingPair, quantity, currentPrice, GetCurrentTimestamp());
-    const auto requestTime = system_clock::now();
-    std::optional<double> fullfillmentQty;
     acc.ReportSellOperation(GetCurrentTimestampSeconds(), currentPrice, quantity, quantity * currentPrice);
-    do
-    {
-        fullfillmentQty = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
-        std::this_thread::sleep_for(milliseconds(tickMilliseconds));
-    } while (!fullfillmentQty);
-    acc.ReportWaitingEnd(duration_cast<milliseconds>(system_clock::now() - requestTime).count());
-    return {};
+    const auto soldQty = std::async(&Trader::AwaitForOrderFullfillment, this, orderId).get();
+    AccountTradeResults(soldQty * currentPrice - spentToBuy);
+    return soldQty;
 }
 
 double Trader::BuyCurrency(const double &quantity)
 {
-    using namespace std::chrono;
-
+    spentToBuy = quantity * currentPrice;
     const auto orderId = webIO.SendBuyRequest(tradingPair, quantity, currentPrice, GetCurrentTimestamp());
-    const auto requestTime = system_clock::now();
-    std::optional<double> fullfillmentQty;
     acc.ReportBuyOperation(GetCurrentTimestampSeconds(), currentPrice, quantity, quantity * currentPrice);
-    do
-    {
-        fullfillmentQty = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
-        std::this_thread::sleep_for(milliseconds(tickMilliseconds));
-    } while (!fullfillmentQty);
-    acc.ReportWaitingEnd(duration_cast<milliseconds>(system_clock::now() - requestTime).count());
-    return {};
+    return std::async(&Trader::AwaitForOrderFullfillment, this, orderId).get();
 }
 
 double Trader::SellAllCurrency()
@@ -77,11 +63,10 @@ void Trader::TradingCycle()
     using namespace std::chrono_literals;
 
     GetValletDataFromServer();
-    acc.ReportBalance(GetCurrentTimestampSeconds(), portfolio[myCurrencySymbol], portfolio[tradingCurrencySymbol]);
+    acc.ReportBalance(GetCurrentTimestampSeconds(), portfolio[myCurrencySymbol], portfolio[tradingCurrencySymbol], results);
 
     UpdatePrice();
     BuyCurrency(currencyToBuyOrSellQuantity);
-    double spentToBuy = currencyToBuyOrSellQuantity * currentPrice;
     cycleStartPrice = currentPrice;
     const auto cycleStartTime = system_clock::now();
     bool didOperation = false;
@@ -92,13 +77,13 @@ void Trader::TradingCycle()
 
         const auto timeSpendMs = duration_cast<milliseconds>(system_clock::now() - tickStartTime);
         const auto timeLeft = milliseconds(tickMilliseconds) - timeSpendMs;
-        std::this_thread::sleep_for(timeLeft);
+        if (timeLeft.count() > 0)
+            std::this_thread::sleep_for(timeLeft);
     }
     if (!didOperation)
     {
         SellCurrency(currencyToBuyOrSellQuantity);
     }
-    acc.AccountNetChange(currentPrice * currencyToBuyOrSellQuantity - spentToBuy);
 }
 
 bool Trader::Tick()
@@ -106,6 +91,7 @@ bool Trader::Tick()
     using namespace std::chrono;
     using namespace std::chrono_literals;
     UpdatePrice();
+    acc.ReportPriceAndDiff(currentPrice, CalculatePercentageDiff());
     const double diffPercent = CalculatePercentageDiff();
     if (diffPercent > profitPercentToBuy || diffPercent < -lossPercentToSell)
     {
@@ -120,11 +106,36 @@ double Trader::CalculatePercentageDiff()
     return (100 * (currentPrice - cycleStartPrice)) / (currentPrice);
 }
 
+double Trader::AwaitForOrderFullfillment(const long long& orderId) const
+{    
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+
+    const auto requestTime = system_clock::now();
+    std::optional<double> fullfillmentQty;
+    do
+    {
+        fullfillmentQty = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
+        std::this_thread::sleep_for(milliseconds(500));
+    } 
+    while (!fullfillmentQty);
+    acc.ReportWaitingEnd(duration_cast<milliseconds>(system_clock::now() - requestTime).count());
+    return fullfillmentQty.value();
+}
+
+void Trader::AccountTradeResults(const double& diff)
+{
+    if (diff < 0)
+        results.allLosses += diff;
+    else 
+        results.allProfits += diff;
+    results.net += diff;
+}
+
 void Trader::UpdatePrice()
 {
     previousTickPrice = currentPrice;
     currentPrice = webIO.GetPrice(tradingPair);
-    acc.ReportPriceAndDiff(currentPrice, CalculatePercentageDiff());
 }
 
 void Trader::GetValletDataFromServer()
