@@ -23,7 +23,7 @@ namespace BuySellRepeat_NS
         {
             params.add_parameter(tradingCurrency, "--trading_currency", "-T").nargs(1).help("Currency to buy or sell");
             params.add_parameter(myCurrency, "--my_currency", "-M").nargs(1).help("Your currency");
-            params.add_parameter(tradingQty, "--trading_qty", "-T").nargs(1).help("Amount of currency you want to trade");
+            params.add_parameter(tradingQty, "--trading_qty", "-Q").nargs(1).help("Amount of currency you want to trade");
             params.add_parameter(lossPercentToSell, "--loss_to_sell", "-L").nargs(1).help("Currencly value loss percentage after which currency will be sold. This value should be positive");
             params.add_parameter(profitPercentToSell, "--profit_to_sell", "-P").nargs(1).help("Currencly value gain percentage after which currency will be sold");
             params.add_parameter(idleTimeToSellSeconds, "--idle_time_seconds", "-I").nargs(1).help("Time period without significant changes after which currency will be sold");
@@ -75,7 +75,8 @@ class Trader
 
     public:
         Trader(const TradingParameters& params, WebIO& wio, Display& display) :
-            lossPercentToSell(params.lossPercentToSell), profitPercentToSell(params.profitPercentToSell), currencyToBuyOrSellQuantity(params.tradingQty), idleTimeToSell(params.idleTimeToSellSeconds), webIO(wio), display(display)
+            lossPercentToSell(params.lossPercentToSell), profitPercentToSell(params.profitPercentToSell), currencyToBuyOrSellQuantity(params.tradingQty), idleTimeToSell(params.idleTimeToSellSeconds), webIO(wio), display(display),
+            tradingCurrencySymbol(params.tradingCurrency), myCurrencySymbol(params.myCurrency)
             {
                 tradingPair = tradingCurrencySymbol + myCurrencySymbol;
                 display.SetCurrencySymbols(myCurrencySymbol, tradingCurrencySymbol);

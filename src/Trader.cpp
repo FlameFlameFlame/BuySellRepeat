@@ -144,7 +144,21 @@ void Trader::UpdatePrice()
 void Trader::GetValletDataFromServer()
 {
     const auto vallet = webIO.GetUserData(GetCurrentTimestamp());
-    portfolio[myCurrencySymbol] = vallet.at(myCurrencySymbol);
-    portfolio[tradingCurrencySymbol] = vallet.at(tradingCurrencySymbol);
+    try 
+    {
+        portfolio[myCurrencySymbol] = vallet.at(myCurrencySymbol);
+    }
+    catch (std::out_of_range& e)
+    {
+        throw std::logic_error (myCurrencySymbol + " is not in your wallet");
+    }
+    try 
+    {
+        portfolio[tradingCurrencySymbol] = vallet.at(tradingCurrencySymbol);
+    }
+    catch (std::out_of_range& e)
+    {
+        throw std::logic_error (tradingCurrencySymbol + " is not in your wallet");
+    }
 }
 }
