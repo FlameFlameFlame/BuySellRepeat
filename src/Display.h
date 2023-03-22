@@ -1,8 +1,9 @@
 #pragma once
 
-#include <ostream>
-
 #include "CommonTypes.h"
+
+#include <ostream>
+#include <time.h>
 
 namespace BuySellRepeat_NS
 {
