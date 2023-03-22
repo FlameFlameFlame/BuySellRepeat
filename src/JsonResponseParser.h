@@ -4,6 +4,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include <optional>
+
 namespace BuySellRepeat_NS
 {
 
