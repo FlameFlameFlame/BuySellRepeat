@@ -4,3 +4,4 @@ src/fintech-test.cpp
 binance_key
 *.DS_Store
 private_key.pem
+commandline
