@@ -4,6 +4,8 @@
 #include "JsonResponseParser.h"
 
 #include <chrono>
+#include <future>
+#include <thread>
 
 namespace BuySellRepeat_NS
 
@@ -37,12 +39,16 @@ void WebIO::SendRequestAwaitResponse(const ResponseType& r, const std::string& r
     using namespace std::chrono;
     using namespace std::chrono_literals;
 
-    using namespace std::chrono_literals;
+    auto sendAndAwaitFunc = ([&](){
     std::unique_lock<std::mutex> lock(resultProtecter);
     ws.send(requestStr);
     
     const auto waitingStartTime = system_clock::now();
-    while (duration_cast<milliseconds>(system_clock::now() - waitingStartTime).count() < 500 && resultCv.wait_for(lock, 50ms) == std::cv_status::timeout); // TODO: parametrise waiting time
+    while (duration_cast<milliseconds>(system_clock::now() - waitingStartTime).count() < 500 && resultCv.wait_for(lock, 50ms) == std::cv_status::timeout); 
+    return std::promise<void>{};}); // TODO: parametrise waiting time
+
+    auto future = std::async(std::launch::deferred, sendAndAwaitFunc);
+    future.wait();
     ++requestId;
 }
 
@@ -181,7 +187,7 @@ std::optional<double> WebIO::SendOrderQuery(const std::string &symbols, const lo
     catch(std::bad_any_cast& e)
     {
         result.reset();
-        return std::nullopt;
+        return {};
     }
 }
 }
