@@ -40,11 +40,22 @@ void JsonQueryGenerator::GenerateJson()
     {
         GenerateBuyOrSellRequest(BuyOrSell::SELL);
     }
+    else if (qt == QueryType::ORDER_QUERY)
+    {
+        resultJson["method"] = "order.status";
+        resultJson["params"]["symbol"] = std::any_cast<std::string>(arguements[0]);
+        resultJson["params"]["timestamp"] = std::any_cast<time_t>(arguements[2]);
+        resultJson["params"]["orderId"] = std::to_string(std::any_cast<long long>(arguements[1]));
+        resultJson["params"]["apiKey"] = apiKey;
+
+        const auto paramsString = GetParamsStringToSign(resultJson["params"]);
+        resultJson["params"]["signature"] = CalculateSignature(paramsString);;
+    }
 }
 
 void JsonQueryGenerator::GenerateBuyOrSellRequest(const BuyOrSell& action)
 {
-        resultJson["method"] = "order.test";
+        resultJson["method"] = "order.place";
         resultJson["params"]["apiKey"] = apiKey;
         resultJson["params"]["symbol"] = std::any_cast<std::string>(arguements[0]);
         resultJson["params"]["side"] = (action == BuyOrSell::BUY) ? "BUY" : "SELL";
@@ -55,8 +66,7 @@ void JsonQueryGenerator::GenerateBuyOrSellRequest(const BuyOrSell& action)
         resultJson["params"]["timestamp"] = std::any_cast<time_t>(arguements[3]);
 
         const auto paramsString = GetParamsStringToSign(resultJson["params"]);
-        const auto sign = CalculateSignature(paramsString);
-        resultJson["params"]["signature"] = sign;
+        resultJson["params"]["signature"] = CalculateSignature(paramsString);
 }
 
 std::string JsonQueryGenerator::CalculateSignature(const std::string& paramsString) const

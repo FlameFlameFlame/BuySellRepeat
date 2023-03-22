@@ -27,7 +27,7 @@ FetchContent_MakeAvailable(hmac_sha256)
 
 target_link_libraries(JsonQueryGenerator nlohmann_json::nlohmann_json hmac_sha256)
 target_link_libraries(JsonResponseParser nlohmann_json::nlohmann_json)
-target_link_libraries(Trader ixwebsocket JsonResponseParser)
+target_link_libraries(Trader ixwebsocket JsonResponseParser Accountant)
 target_link_libraries(WebIO ixwebsocket JsonResponseParser)
 target_link_libraries(fintech-test PRIVATE nlohmann_json::nlohmann_json ixwebsocket Trader Accountant WebIO JsonQueryGenerator JsonResponseParser ixwebsocket)
 

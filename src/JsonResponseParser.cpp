@@ -39,6 +39,7 @@ std::pair<std::string, double> JsonResponseParser::getPriceFromTicker() const
     else
         throw std::logic_error("Received malformed JSON: no result field");
 }
+
 time_t JsonResponseParser::getServerTime() const
 {
     if (receivedJson.contains("result"))
@@ -49,13 +50,45 @@ time_t JsonResponseParser::getServerTime() const
         throw std::logic_error("Received malformed JSON: no result field");
 }
 
-std::string JsonResponseParser::getSellRequestResult() const
+long long JsonResponseParser::getSellRequestResult() const
 {
-    return receivedJson.dump();
+    if (receivedJson.contains("result"))
+    {
+        return std::stol(receivedJson["result"]["orderId"].dump());
+    }
+    else
+        throw std::logic_error("Received malformed JSON: no result field");
 }
 
-std::string JsonResponseParser::getBuyRequestResult() const
+long long JsonResponseParser::getBuyRequestResult() const
 {
-    return receivedJson.dump();
+    if (receivedJson.contains("result"))
+    {
+        return std::stol(receivedJson["result"]["orderId"].dump());
+    }
+    else
+        throw std::logic_error("Received malformed JSON: no result field");
+}
+
+std::optional<double> JsonResponseParser::getOrderQueryResult() const
+{
+    if (receivedJson.contains("result"))
+    {
+        const auto statusStr = receivedJson["result"]["status"].get<std::string>();
+        if (statusStr == "FILLED")
+        {
+            return std::optional(std::stod(receivedJson["result"]["executedQty"].get<std::string>()));
+        }
+        else if (statusStr == "NEW" || statusStr == "PARTIALLY_FILLED")
+        {
+            return std::nullopt;
+        }
+        else 
+        {
+            throw std::logic_error("Issue with an order, order status is " + receivedJson["result"]["status"].dump());
+        }
+    }
+    else
+        throw std::logic_error("Received malformed JSON: no result field");
 }
 }

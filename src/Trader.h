@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Accountant.h"
 #include "CommonTypes.h"
 #include "WebIO.h"
 
@@ -20,14 +21,19 @@ class Trader
         double currentPrice = 0;
         double previousTickPrice;
         // "resolution"
-        int tickSeconds = 1;
+        double tickSeconds = 2.0;
         double currencyToBuyOrSellQuantity = 0;
+        double cycleStartPrice = 0;
 
         std::string myCurrencySymbol;
         std::string tradingCurrencySymbol;
         Vallets portfolio;
 
         WebIO& webIO;
+        Accountant& acc;
+
+        std::mutex tickMutex;
+        std::condition_variable tickCv;
 
         bool doTrade;
 
@@ -39,11 +45,11 @@ class Trader
         double CalculatePercentageDiff();
 
     public:
-        Trader(const std::string& _tradingPair, const double& currencyToBuyQuantity, const double& _lossPercentToSell, const double& _profitPercentToBuy, const unsigned int& idleTimeToSellSeconds,  WebIO& wio) :
-            lossPercentToSell(_lossPercentToSell), profitPercentToBuy(_profitPercentToBuy), tradingPair(_tradingPair), currencyToBuyOrSellQuantity(currencyToBuyQuantity), idleTimeToSell(idleTimeToSellSeconds), webIO(wio) 
+        Trader(const std::string& _tradingPair, const double& currencyToBuyQuantity, const double& _lossPercentToSell, const double& _profitPercentToBuy, const unsigned int& idleTimeToSellSeconds,  WebIO& wio, Accountant& acc) :
+            lossPercentToSell(_lossPercentToSell), profitPercentToBuy(_profitPercentToBuy), tradingPair(_tradingPair), currencyToBuyOrSellQuantity(currencyToBuyQuantity), idleTimeToSell(idleTimeToSellSeconds), webIO(wio), acc(acc)
             {
-                std::copy(tradingPair.begin(), tradingPair.begin() + 3, std::back_inserter(myCurrencySymbol));
-                std::copy(tradingPair.begin() + 3, tradingPair.end(), std::back_inserter(tradingCurrencySymbol));
+                std::copy(tradingPair.begin() + 3, tradingPair.end(), std::back_inserter(myCurrencySymbol));
+                std::copy(tradingPair.begin(), tradingPair.begin() + 3, std::back_inserter(tradingCurrencySymbol));
                 GetValletDataFromServer();
                 UpdatePrice();
                 if (currencyToBuyOrSellQuantity / currentPrice > GetMyCurrencyQuantity())
@@ -76,6 +82,11 @@ class Trader
         std::string BuyCurrenctyForAll();
 
         static std::time_t GetCurrentTimestamp();
+        static std::time_t GetCurrentTimestampSeconds()
+        {
+            return GetCurrentTimestamp() / 1000;
+        };
+
 
         void StartTrading();
         void StopTrading()

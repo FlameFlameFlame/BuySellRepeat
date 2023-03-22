@@ -24,7 +24,8 @@ enum class QueryType
     TICKER,
     SELL_REQUEST,
     BUY_REQUEST,
-    USER_DATA
+    USER_DATA,
+    ORDER_QUERY
 };
 
 enum class ResponseType
@@ -33,6 +34,7 @@ enum class ResponseType
     TICKER,
     USER_DATA,
     BUY_REQUEST_ACK,
-    SELL_REQUEST_ACK
+    SELL_REQUEST_ACK,
+    ORDER_QUERY
 };
 }

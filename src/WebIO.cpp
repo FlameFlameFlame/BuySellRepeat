@@ -3,6 +3,8 @@
 #include "JsonQueryGenerator.h"
 #include "JsonResponseParser.h"
 
+#include <chrono>
+
 namespace BuySellRepeat_NS
 
 {
@@ -23,6 +25,8 @@ void WebIO::HandleMessage(const ix::WebSocketMessagePtr &msg)
         result = jrp.getBuyRequestResult();
     else if (expectedResponse == ResponseType::SELL_REQUEST_ACK)
         result = jrp.getSellRequestResult();
+    else if (expectedResponse == ResponseType::ORDER_QUERY)
+        result = jrp.getOrderQueryResult();
 
     resultCv.notify_one();
 
@@ -30,10 +34,15 @@ void WebIO::HandleMessage(const ix::WebSocketMessagePtr &msg)
 
 void WebIO::SendRequestAwaitResponse(const ResponseType& r, const std::string& requestStr)
 {
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(resultProtecter);
     ws.send(requestStr);
-    while (resultCv.wait_for(lock, 50ms) == std::cv_status::timeout); // TODO: parametrise waiting time
+    
+    const auto waitingStartTime = system_clock::now();
+    while (duration_cast<milliseconds>(system_clock::now() - waitingStartTime).count() < 500 && resultCv.wait_for(lock, 50ms) == std::cv_status::timeout); // TODO: parametrise waiting time
     ++requestId;
 }
 
@@ -61,6 +70,13 @@ std::string WebIO::GenerateBuyRequest(const std::string &symbols, const double &
 std::string WebIO::GenerateSellRequest(const std::string &symbols, const double &qty, const double &price, const std::time_t timestamp)
 {
     JsonQueryGenerator jqg(requestId, QueryType::SELL_REQUEST, apiKey, secretKey, {symbols, qty, price, timestamp});
+    const auto reqstr = jqg.GetJson().dump();
+    return reqstr;
+}
+
+std::string WebIO::GenerateQueryRequest(const std::string &symbols, const long long &orderId, const std::time_t &timestamp)
+{
+    JsonQueryGenerator jqg(requestId, QueryType::ORDER_QUERY, apiKey, secretKey, {symbols, orderId, timestamp});
     const auto reqstr = jqg.GetJson().dump();
     return reqstr;
 }
@@ -102,21 +118,31 @@ std::time_t WebIO::GetServerTime()
     return retVal;
 }
 
-std::string WebIO::SendBuyRequest(const std::string &symbols, const double &qty, const double &price, const std::time_t timestamp)
+long long WebIO::SendBuyRequest(const std::string &symbols, const double &qty, const double &price, const std::time_t timestamp)
 {
     expectedResponse = ResponseType::BUY_REQUEST_ACK;
     SendRequestAwaitResponse(ResponseType::SERVER_TIME, GenerateBuyRequest(symbols, qty, price, timestamp));
-    const auto retVal = std::any_cast<std::string>(result);
+    const auto retVal = std::any_cast<long long>(result);
     result.reset();
     return retVal;
 }
 
-std::string WebIO::SendSellRequest(const std::string &symbols, const double &qty, const double &price, const std::time_t timestamp)
+long long WebIO::SendSellRequest(const std::string &symbols, const double &qty, const double &price, const std::time_t timestamp)
 {
     expectedResponse = ResponseType::SELL_REQUEST_ACK;
-    SendRequestAwaitResponse(ResponseType::SERVER_TIME, GenerateBuyRequest(symbols, qty, price, timestamp));
-    const auto retVal = std::any_cast<std::string>(result);
+    SendRequestAwaitResponse(ResponseType::SERVER_TIME, GenerateSellRequest(symbols, qty, price, timestamp));
+    const auto retVal = std::any_cast<long long>(result);
     result.reset();
     return retVal;
+}
+
+std::optional<double> WebIO::SendOrderQuery(const std::string &symbols, const long long &orderId, const std::time_t& timestamp)
+{
+    expectedResponse = ResponseType::ORDER_QUERY;
+    SendRequestAwaitResponse(ResponseType::ORDER_QUERY, GenerateQueryRequest(symbols, orderId, timestamp)); 
+    const auto retVal = std::any_cast<std::optional<double>>(result);
+    result.reset();
+    return retVal;
+
 }
 }
