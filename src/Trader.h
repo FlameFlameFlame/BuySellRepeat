@@ -4,8 +4,32 @@
 #include "Display.h"
 #include "WebIO.h"
 
+#include <argumentum/argparse.h>
+
 namespace BuySellRepeat_NS
 {
+
+    class TradingParameters : public argumentum::Options
+{
+    public:
+        std::string tradingCurrency;
+        std::string myCurrency;
+        double tradingQty;
+        double lossPercentToSell;
+        double profitPercentToSell;
+        int idleTimeToSellSeconds;
+    protected:
+        void add_parameters(argumentum::ParameterConfig& params) override
+        {
+            params.add_parameter(tradingCurrency, "--trading_currency", "-T").nargs(1).help("Currency to buy or sell");
+            params.add_parameter(myCurrency, "--my_currency", "-M").nargs(1).help("Your currency");
+            params.add_parameter(tradingQty, "--trading_qty", "-T").nargs(1).help("Amount of currency you want to trade");
+            params.add_parameter(lossPercentToSell, "--loss_to_sell", "-L").nargs(1).help("Currencly value loss percentage after which currency will be sold. This value should be positive");
+            params.add_parameter(profitPercentToSell, "--profit_to_sell", "-P").nargs(1).help("Currencly value gain percentage after which currency will be sold");
+            params.add_parameter(idleTimeToSellSeconds, "--idle_time_seconds", "-I").nargs(1).help("Time period without significant changes after which currency will be sold");
+        }
+
+};
 
 class Trader
 {
@@ -13,8 +37,7 @@ class Trader
         // price drop at which we're selling
         double lossPercentToSell;
         // price rise at which we're buying
-        double profitPercentToBuy;
-        std::string tradingPair;
+        double profitPercentToSell;
         // time without significant price changes to sell
         unsigned int idleTimeToSell;
 
@@ -25,12 +48,14 @@ class Trader
         double currencyToBuyOrSellQuantity = 0;
         double cycleStartPrice = 0;
 
-        std::string myCurrencySymbol;
-        std::string tradingCurrencySymbol;
+        const std::string myCurrencySymbol;
+        const std::string tradingCurrencySymbol;
+        std::string tradingPair;
+
         Vallets portfolio;
 
         WebIO& webIO;
-        Display& acc;
+        Display& display;
 
         bool doTrade;
 
@@ -49,15 +74,11 @@ class Trader
         void AccountTradeResults(const double& diff);
 
     public:
-        Trader(const std::string& _tradingPair, const double& currencyToBuyQuantity, const double& _lossPercentToSell, const double& _profitPercentToBuy, const unsigned int& idleTimeToSellSeconds,  WebIO& wio, Display& acc) :
-            lossPercentToSell(_lossPercentToSell), profitPercentToBuy(_profitPercentToBuy), tradingPair(_tradingPair), currencyToBuyOrSellQuantity(currencyToBuyQuantity), idleTimeToSell(idleTimeToSellSeconds), webIO(wio), acc(acc)
+        Trader(const TradingParameters& params, WebIO& wio, Display& display) :
+            lossPercentToSell(params.lossPercentToSell), profitPercentToSell(params.profitPercentToSell), currencyToBuyOrSellQuantity(params.tradingQty), idleTimeToSell(params.idleTimeToSellSeconds), webIO(wio), display(display)
             {
-                std::copy(tradingPair.begin() + 3, tradingPair.end(), std::back_inserter(myCurrencySymbol));
-                std::copy(tradingPair.begin(), tradingPair.begin() + 3, std::back_inserter(tradingCurrencySymbol));
-                GetValletDataFromServer();
-                UpdatePrice();
-                if (currencyToBuyOrSellQuantity / currentPrice > GetMyCurrencyQuantity())
-                    throw std::logic_error("Trying to buy " + std::to_string(currencyToBuyOrSellQuantity) + " " + tradingCurrencySymbol + " for " + std::to_string(currencyToBuyOrSellQuantity / currentPrice) + " " + myCurrencySymbol + ", but have only " + std::to_string(GetMyCurrencyQuantity()) + " " + myCurrencySymbol);
+                tradingPair = tradingCurrencySymbol + myCurrencySymbol;
+                display.SetCurrencySymbols(myCurrencySymbol, tradingCurrencySymbol);
             };
         ~Trader() = default;
 

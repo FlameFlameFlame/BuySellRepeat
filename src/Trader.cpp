@@ -8,7 +8,7 @@ namespace BuySellRepeat_NS
 double Trader::SellCurrency(const double &quantity)
 {
     const auto orderId = webIO.SendSellRequest(tradingPair, quantity, currentPrice, GetCurrentTimestamp());
-    acc.ReportSellOperation(GetCurrentTimestampSeconds(), currentPrice, quantity, quantity * currentPrice);
+    display.ReportSellOperation(GetCurrentTimestampSeconds(), currentPrice, quantity, quantity * currentPrice);
     const auto soldQty = AwaitForOrderFullfillment(orderId);
     AccountTradeResults(soldQty * currentPrice - spentToBuy);
     return soldQty;
@@ -18,7 +18,7 @@ double Trader::BuyCurrency(const double &quantity)
 {
     spentToBuy = quantity * currentPrice;
     const auto orderId = webIO.SendBuyRequest(tradingPair, quantity, currentPrice, GetCurrentTimestamp());
-    acc.ReportBuyOperation(GetCurrentTimestampSeconds(), currentPrice, quantity, quantity * currentPrice);
+    display.ReportBuyOperation(GetCurrentTimestampSeconds(), currentPrice, quantity, quantity * currentPrice);
     return AwaitForOrderFullfillment(orderId);
 }
 
@@ -43,7 +43,7 @@ std::time_t Trader::GetCurrentTimestamp()
 void Trader::StartTrading()
 {
     doTrade = true;
-    acc.ReportTradingStart(tradingPair, currencyToBuyOrSellQuantity, lossPercentToSell, profitPercentToBuy, idleTimeToSell);
+    display.ReportTradingStart(tradingPair, currencyToBuyOrSellQuantity, lossPercentToSell, profitPercentToSell, idleTimeToSell);
     TradingLoop();
 }
 
@@ -61,7 +61,10 @@ void Trader::TradingCycle()
     using namespace std::chrono_literals;
 
     GetValletDataFromServer();
-    acc.ReportBalance(GetCurrentTimestampSeconds(), portfolio[myCurrencySymbol], portfolio[tradingCurrencySymbol], results);
+    display.ReportBalance(GetCurrentTimestampSeconds(), portfolio[myCurrencySymbol], portfolio[tradingCurrencySymbol], results);
+
+    if (currencyToBuyOrSellQuantity * currentPrice > GetMyCurrencyQuantity())
+        throw std::logic_error("Trying to buy " + std::to_string(currencyToBuyOrSellQuantity) + " " + tradingCurrencySymbol + " for " + std::to_string(currencyToBuyOrSellQuantity / currentPrice) + " " + myCurrencySymbol + ", but have only " + std::to_string(GetMyCurrencyQuantity()) + " " + myCurrencySymbol);
 
     UpdatePrice();
     BuyCurrency(currencyToBuyOrSellQuantity);
@@ -89,9 +92,9 @@ bool Trader::Tick()
     using namespace std::chrono;
     using namespace std::chrono_literals;
     UpdatePrice();
-    acc.ReportPriceAndDiff(currentPrice, CalculatePercentageDiff());
+    display.ReportPriceAndDiff(currentPrice, CalculatePercentageDiff());
     const double diffPercent = CalculatePercentageDiff();
-    if (diffPercent > profitPercentToBuy || diffPercent < -lossPercentToSell)
+    if (diffPercent > profitPercentToSell || diffPercent < -lossPercentToSell)
     {
         SellCurrency(currencyToBuyOrSellQuantity);
         return true;
@@ -111,15 +114,15 @@ double Trader::AwaitForOrderFullfillment(const long long& orderId) const
 
     const auto requestTime = system_clock::now();
     std::optional<double> fullfillmentQty;
-    // acc.ReportOrderWaitingStart();
+    // display.ReportOrderWaitingStart();
     do
     {
         fullfillmentQty = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
-        // acc.ReportOrderWaiting(duration_cast<seconds>(system_clock::now() - requestTime).count());
+        // display.ReportOrderWaiting(duration_cast<seconds>(system_clock::now() - requestTime).count());
         std::this_thread::sleep_for(milliseconds(500));
     } 
     while (!fullfillmentQty);
-    acc.ReportWaitingEnd(duration_cast<milliseconds>(system_clock::now() - requestTime).count());
+    display.ReportWaitingEnd(duration_cast<milliseconds>(system_clock::now() - requestTime).count());
     return fullfillmentQty.value();
 }
 
