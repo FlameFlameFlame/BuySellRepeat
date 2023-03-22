@@ -5,7 +5,7 @@
 namespace BuySellRepeat_NS
 {
 
-std::string Trader::SellCurrency(const double &quantity)
+double Trader::SellCurrency(const double &quantity)
 {
     using namespace std::chrono;
     const auto orderId = webIO.SendSellRequest(tradingPair, quantity, currentPrice, GetCurrentTimestamp());
@@ -15,17 +15,13 @@ std::string Trader::SellCurrency(const double &quantity)
     do
     {
         fullfillmentQty = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
+        std::this_thread::sleep_for(milliseconds(tickMilliseconds));
     } while (!fullfillmentQty);
     acc.ReportWaitingEnd(duration_cast<milliseconds>(system_clock::now() - requestTime).count());
-
-    if (fullfillmentQty)
-    {
-        acc.AccountNetChange(fullfillmentQty.value() * currentPrice);
-    }
     return {};
 }
 
-std::string Trader::BuyCurrency(const double &quantity)
+double Trader::BuyCurrency(const double &quantity)
 {
     using namespace std::chrono;
 
@@ -36,23 +32,19 @@ std::string Trader::BuyCurrency(const double &quantity)
     do
     {
         fullfillmentQty = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
+        std::this_thread::sleep_for(milliseconds(tickMilliseconds));
     } while (!fullfillmentQty);
     acc.ReportWaitingEnd(duration_cast<milliseconds>(system_clock::now() - requestTime).count());
-
-    if (fullfillmentQty)
-    {
-        acc.AccountNetChange(-fullfillmentQty.value() * currentPrice);
-    }
     return {};
 }
 
-std::string Trader::SellAllCurrency()
+double Trader::SellAllCurrency()
 {
     const auto retStr = SellCurrency(portfolio.at(tradingCurrencySymbol));
     return retStr;
 }
 
-std::string Trader::BuyCurrenctyForAll()
+double Trader::BuyCurrenctyForAll()
 {
     const auto retStr = BuyCurrency(portfolio.at(myCurrencySymbol));
     return retStr;
@@ -89,6 +81,7 @@ void Trader::TradingCycle()
 
     UpdatePrice();
     BuyCurrency(currencyToBuyOrSellQuantity);
+    double spentToBuy = currencyToBuyOrSellQuantity * currentPrice;
     cycleStartPrice = currentPrice;
     const auto cycleStartTime = system_clock::now();
     bool didOperation = false;
@@ -98,13 +91,14 @@ void Trader::TradingCycle()
         didOperation = Tick();
 
         const auto timeSpendMs = duration_cast<milliseconds>(system_clock::now() - tickStartTime);
-        const auto timeLeft = milliseconds((int) tickSeconds * 1000) - timeSpendMs;
+        const auto timeLeft = milliseconds(tickMilliseconds) - timeSpendMs;
         std::this_thread::sleep_for(timeLeft);
     }
     if (!didOperation)
     {
         SellCurrency(currencyToBuyOrSellQuantity);
     }
+    acc.AccountNetChange(currentPrice * currencyToBuyOrSellQuantity - spentToBuy);
 }
 
 bool Trader::Tick()
@@ -112,17 +106,10 @@ bool Trader::Tick()
     using namespace std::chrono;
     using namespace std::chrono_literals;
     UpdatePrice();
-    const double diff = CalculatePercentageDiff();
-    if (diff > 0 && diff > profitPercentToBuy)
-    {
-        BuyCurrency(currencyToBuyOrSellQuantity);
-        tickCv.notify_one();
-        return true;
-    }
-    if (diff < 0 && diff < -lossPercentToSell)
+    const double diffPercent = CalculatePercentageDiff();
+    if (diffPercent > profitPercentToBuy || diffPercent < -lossPercentToSell)
     {
         SellCurrency(currencyToBuyOrSellQuantity);
-        tickCv.notify_one();
         return true;
     }
     return false;

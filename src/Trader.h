@@ -21,7 +21,7 @@ class Trader
         double currentPrice = 0;
         double previousTickPrice;
         // "resolution"
-        double tickSeconds = 2.0;
+        int tickMilliseconds = 1000;
         double currencyToBuyOrSellQuantity = 0;
         double cycleStartPrice = 0;
 
@@ -31,9 +31,6 @@ class Trader
 
         WebIO& webIO;
         Accountant& acc;
-
-        std::mutex tickMutex;
-        std::condition_variable tickCv;
 
         bool doTrade;
 
@@ -75,11 +72,11 @@ class Trader
             return portfolio.at(myCurrencySymbol);
         }
         
-        std::string SellCurrency(const double& quantity);
-        std::string BuyCurrency(const double& quantity);
+        double SellCurrency(const double& quantity);
+        double BuyCurrency(const double& quantity);
 
-        std::string SellAllCurrency();
-        std::string BuyCurrenctyForAll();
+        double SellAllCurrency();
+        double BuyCurrenctyForAll();
 
         static std::time_t GetCurrentTimestamp();
         static std::time_t GetCurrentTimestampSeconds()
