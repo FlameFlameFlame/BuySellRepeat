@@ -26,7 +26,7 @@ void BuySellRepeat_NS::Display::ReportSellOperation(const std::time_t &timestamp
     " for " << recvQty << " " << myCurrencySymbol << std::endl << std::endl;
 }
 
-void BuySellRepeat_NS::Display::ReportBalance(const std::time_t &timestamp, const double& tradingCurrencyBalance, const double& myCurrencyBalance, const TradeResults& results) 
+void BuySellRepeat_NS::Display::ReportBalance(const std::time_t &timestamp, const double& myCurrencyBalance, const double& tradingCurrencyBalance, const TradeResults& results) 
 {
     outStream << std::ctime(&timestamp) << myCurrencySymbol << ": " << std::to_string(myCurrencyBalance) << "\t" <<
     tradingCurrencySymbol << ": " << std::to_string(tradingCurrencyBalance) << std::endl <<
@@ -37,7 +37,7 @@ void BuySellRepeat_NS::Display::ReportBalance(const std::time_t &timestamp, cons
 void BuySellRepeat_NS::Display::ReportPriceAndDiff(const double &price, const double &diff)
 {
     outStream <<  tradingCurrencySymbol + myCurrencySymbol << ": " <<
-    std::to_string(price) << " diff\t\t" << std::to_string(diff) + "%" << std::endl;
+    std::to_string(price) << "\t\tdiff: " << std::to_string(diff) + "%" << std::endl;
 }
 
 void BuySellRepeat_NS::Display::ReportWaitingEnd(const unsigned int &duration)

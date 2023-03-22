@@ -18,8 +18,8 @@ private:
 public:
     Display(std::ostream& os, const std::string& tradingPair): outStream(os) 
     {
-        std::copy(tradingPair.begin(), tradingPair.begin() + 3, std::back_inserter(tradingCurrencySymbol));
         std::copy(tradingPair.begin() + 3, tradingPair.end(), std::back_inserter(myCurrencySymbol));
+        std::copy(tradingPair.begin(), tradingPair.begin() + 3, std::back_inserter(tradingCurrencySymbol));
     };
     ~Display() = default;
 
