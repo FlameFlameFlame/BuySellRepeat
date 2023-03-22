@@ -2,13 +2,13 @@
 
 #include <thread>
 
-void BuySellRepeat_NS::Display::ReportTradingStart(const std::string &tradingPair, const double &currencyToBuyQuantity, const double &lossPercentToSell, const double &profitPercentToBuy, const unsigned int &idleTimeToSellSeconds)
+void BuySellRepeat_NS::Display::ReportTradingStart(const std::string &tradingPair, const double &currencyToBuyQuantity, const double &lossPercentToSell, const double &profitPercentToSell, const unsigned int &idleTimeToSellSeconds)
 {
     outStream << "Starting trade with parameters:" << std::endl <<
     "Trading pair " << tradingPair << std::endl <<
     "Initial buy qty " <<  std::to_string(currencyToBuyQuantity) << std::endl <<
     "Sell if loss higher then " << std::to_string(lossPercentToSell) << "%" << std::endl << 
-    "Buy if profit higher then " << std::to_string(profitPercentToBuy) << "%" << std::endl <<
+    "Buy if profit higher then " << std::to_string(profitPercentToSell) << "%" << std::endl <<
     "Sell if no signinificant changes after " << std::to_string(idleTimeToSellSeconds) << "s" << std::endl;
 }
 

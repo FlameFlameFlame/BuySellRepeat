@@ -16,10 +16,8 @@ private:
     std::ostream& outStream;
     const std::string waitingSting = "Waiting for order fullfillment for ";
 public:
-    Display(std::ostream& os, const std::string& tradingPair): outStream(os) 
+    Display(std::ostream& os): outStream(os) 
     {
-        std::copy(tradingPair.begin() + 3, tradingPair.end(), std::back_inserter(myCurrencySymbol));
-        std::copy(tradingPair.begin(), tradingPair.begin() + 3, std::back_inserter(tradingCurrencySymbol));
     };
     ~Display() = default;
 
@@ -31,5 +29,10 @@ public:
     void ReportWaitingEnd(const unsigned int& duration);
     void ReportOrderWaiting(const unsigned int& durationSeconds);
     void ReportOrderWaitingStart();
+    void SetCurrencySymbols(const std::string& _myCurrencySymbol, const std::string& _tradingCurrencySymbol)
+    {
+        myCurrencySymbol = _myCurrencySymbol;
+        tradingCurrencySymbol = _tradingCurrencySymbol;
+    }
 };
 }
