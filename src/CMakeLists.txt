@@ -1,15 +1,13 @@
 add_subdirectory(thirdparty)
 
-add_executable(fintech-test fintech-test.cpp)
+add_executable(fintech-test fintech-test.cpp CommonTypes.h)
 add_library(Display Display.cpp)
 add_library(Trader Trader.cpp)
 add_library(WebIO WebIO.cpp)
 add_library(JsonResponseParser JsonResponseParser.cpp)
 add_library(JsonQueryGenerator JsonQueryGenerator.cpp)
 
-
 set_property(TARGET fintech-test Display Trader WebIO JsonResponseParser JsonQueryGenerator PROPERTY CXX_STANDARD 17)
-
 
 include(FetchContent)
 
@@ -24,12 +22,13 @@ FetchContent_Declare(   hmac_sha256
 )
 FetchContent_MakeAvailable(hmac_sha256)
 
-
+include_directories(thirdparty/argumentum)
 target_link_libraries(JsonQueryGenerator nlohmann_json::nlohmann_json hmac_sha256)
 target_link_libraries(JsonResponseParser nlohmann_json::nlohmann_json)
-target_link_libraries(Trader ixwebsocket JsonResponseParser Display)
+target_link_libraries(Trader ixwebsocket JsonResponseParser Display Argumentum::argumentum)
 target_link_libraries(WebIO ixwebsocket JsonResponseParser)
-target_link_libraries(fintech-test PRIVATE nlohmann_json::nlohmann_json ixwebsocket Trader Display WebIO JsonQueryGenerator JsonResponseParser ixwebsocket)
+target_link_libraries(fintech-test PRIVATE nlohmann_json::nlohmann_json ixwebsocket Trader Display WebIO JsonQueryGenerator JsonResponseParser ixwebsocket Argumentum::argumentum)
+
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
