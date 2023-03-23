@@ -77,6 +77,6 @@ public:
     std::time_t GetServerTime();
     long long SendBuyRequest(const std::string& symbols, const double& qty, const double& price, const std::time_t timestamp);
     long long SendSellRequest(const std::string& symbols, const double& qty, const double& price, const std::time_t timestamp);
-    std::optional<double> SendOrderQuery(const std::string &symbols, const long long &orderId, const std::time_t& timestamp);
+    std::pair<bool, double> SendOrderQuery(const std::string &symbols, const long long &orderId, const std::time_t& timestamp);
 };
 }

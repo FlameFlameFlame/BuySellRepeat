@@ -29,7 +29,7 @@ class JsonResponseParser
         time_t getServerTime() const;
         long long getSellRequestResult() const;
         long long getBuyRequestResult() const;
-        std::optional<double> getOrderQueryResult() const;
+        std::pair<bool, double> getOrderQueryResult() const;
 
 };
 }

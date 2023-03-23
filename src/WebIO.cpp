@@ -182,13 +182,13 @@ long long WebIO::SendSellRequest(const std::string &symbols, const double &qty, 
     }
 }
 
-std::optional<double> WebIO::SendOrderQuery(const std::string &symbols, const long long &orderId, const std::time_t& timestamp)
+std::pair<bool, double> WebIO::SendOrderQuery(const std::string &symbols, const long long &orderId, const std::time_t& timestamp)
 {
     expectedResponse = ResponseType::ORDER_QUERY;
     SendRequestAwaitResponse(ResponseType::ORDER_QUERY, GenerateQueryRequest(symbols, orderId, timestamp)); 
     try
     {
-        const auto retVal = std::any_cast<std::optional<double>>(result);
+        const auto retVal = std::any_cast<std::pair<bool, double>>(result);
         result.reset();
         return retVal;
     }

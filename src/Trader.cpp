@@ -112,20 +112,22 @@ double Trader::AwaitForOrderFullfillment(const long long& orderId) const
     using namespace std::chrono;
     using namespace std::chrono_literals;
 
-    const auto requestTime = system_clock::now();
-    std::optional<double> fullfillmentQty;
+    double fullfillmentQty;
     auto queryTimeStart = system_clock::now();
-    do
+    const auto requestTime = system_clock::now();
+    while (1)
     {
         if (duration_cast<milliseconds>(system_clock::now() - queryTimeStart).count() > tickMilliseconds)
         {
-            fullfillmentQty = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
+            const auto [isFullfilled, fullfillmentQty] = webIO.SendOrderQuery(tradingPair, orderId, GetCurrentTimestamp());
             queryTimeStart = system_clock::now();
+            display.ReportOrderWaiting(GetCurrentTimestampSeconds(), duration_cast<seconds>(system_clock::now() - requestTime).count(), fullfillmentQty);
+            if (isFullfilled)
+                break;
         }
     } 
-    while (!fullfillmentQty);
-    display.ReportWaitingEnd(duration_cast<milliseconds>(system_clock::now() - requestTime).count());
-    return fullfillmentQty.value();
+    display.ReportWaitingEnd(GetCurrentTimestampSeconds(), duration_cast<milliseconds>(system_clock::now() - requestTime).count());
+    return fullfillmentQty;
 }
 
 void Trader::AccountTradeResults(const double& diff)

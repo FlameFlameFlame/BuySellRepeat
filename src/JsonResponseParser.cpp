@@ -70,18 +70,18 @@ long long JsonResponseParser::getBuyRequestResult() const
         throw std::logic_error("Received malformed JSON: no result field");
 }
 
-std::optional<double> JsonResponseParser::getOrderQueryResult() const
+std::pair<bool, double> JsonResponseParser::getOrderQueryResult() const
 {
     if (receivedJson.contains("result"))
     {
         const auto statusStr = receivedJson["result"]["status"].get<std::string>();
         if (statusStr == "FILLED")
         {
-            return std::optional(std::stod(receivedJson["result"]["executedQty"].get<std::string>()));
+            return {true, std::stod(receivedJson["result"]["executedQty"].get<std::string>())};
         }
         else if (statusStr == "NEW" || statusStr == "PARTIALLY_FILLED")
         {
-            return std::nullopt;
+            return {false, std::stod(receivedJson["result"]["executedQty"].get<std::string>())};
         }
         else 
         {
